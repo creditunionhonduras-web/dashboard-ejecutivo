@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Ejecutivo — CREDITUNION</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#2B3952;--navy-l:#3a4d6b;--navy-d:#1e293d;
+  --green:#6AC187;--green-l:#8ed4a0;--green-p:#e8f7ed;
+  --gray:#C2C1C1;--gray-l:#f5f5f5;--gray-m:#e8e8e8;
+  --amber:#f59e0b;--amber-p:#fffbeb;
+  --red:#ef4444;--red-p:#fef2f2;
+  --text:#1a1a2e;--muted:#6b7280;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#eef0f4;color:var(--text);}
+
+.hdr{background:var(--navy-d);height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.3);}
+.hdr-l{display:flex;align-items:center;gap:14px;}
+.logo{width:34px;height:34px;background:var(--green);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--navy-d);}
+.hdr-title{color:#fff;font-size:15px;font-weight:700;}
+.hdr-sub{color:rgba(255,255,255,.4);font-size:11px;}
+.hdr-r{display:flex;align-items:center;gap:10px;}
+.date-pill{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 12px;color:rgba(255,255,255,.65);font-size:12px;}
+.user-pill{background:rgba(106,193,135,.15);border:1px solid rgba(106,193,135,.3);border-radius:6px;padding:4px 12px;color:var(--green-l);font-size:11px;}
+.btn-ref{background:var(--green);border:none;border-radius:6px;padding:6px 14px;color:var(--navy-d);font-size:12px;font-weight:700;cursor:pointer;}
+
+/* SPLASH / ERROR */
+.splash{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 60px);}
+.splash-box{background:#fff;border-radius:14px;padding:48px 40px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1);max-width:420px;width:90%;}
+.splash-icon{font-size:52px;margin-bottom:16px;}
+.splash-title{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px;}
+.splash-sub{font-size:13px;color:var(--muted);line-height:1.6;}
+.splash-btn{display:inline-block;margin-top:20px;background:var(--navy);color:#fff;padding:10px 24px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;}
+.spinner{width:44px;height:44px;border-radius:50%;border:4px solid var(--gray-m);border-top-color:var(--green);animation:spin .8s linear infinite;margin:0 auto 20px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* FILTER BAR */
+.filter-bar{background:#fff;border-radius:10px;padding:13px 18px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.filter-bar label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+.fsel{background:var(--gray-l);border:1px solid var(--gray-m);border-radius:7px;padding:7px 10px;font-size:12px;color:var(--text);cursor:pointer;min-width:160px;}
+.fsel:focus{outline:none;border-color:var(--navy);}
+.fclear{background:var(--gray-m);border:none;border-radius:5px;padding:6px 12px;font-size:11px;cursor:pointer;}
+.fclear:hover{background:var(--gray);}
+.fcnt{font-size:12px;color:var(--muted);margin-left:auto;}
+.fcnt strong{color:var(--navy);}
+
+.main{padding:22px 28px;max-width:1380px;margin:0 auto;}
+.sec{display:flex;align-items:center;gap:10px;margin:24px 0 12px;}
+.sec h2{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;}
+.sec-line{flex:1;height:1px;background:var(--gray-m);}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:14px;margin-bottom:22px;}
+.kpi{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-top:3px solid transparent;position:relative;overflow:hidden;}
+.kpi.g{border-top-color:var(--green);}
+.kpi.a{border-top-color:var(--amber);}
+.kpi.r{border-top-color:var(--red);}
+.kpi.n{border-top-color:var(--navy);}
+.kpi-lbl{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;}
+.kpi-val{font-size:24px;font-weight:800;color:var(--navy);line-height:1;margin-bottom:3px;}
+.kpi-val.sm{font-size:18px;}
+.kpi-sub{font-size:11px;color:var(--muted);}
+.kpi-ico{position:absolute;right:14px;top:14px;font-size:26px;opacity:.1;}
+
+.charts2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+.charts3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+.card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.card h3{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:3px;}
+.card-sub{font-size:11px;color:var(--muted);margin-bottom:14px;}
+.ch-wrap{position:relative;height:210px;}
+
+.tbl-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:20px;overflow-x:auto;}
+.tbl-card h3{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:3px;}
+.tbl-sub{font-size:11px;color:var(--muted);margin-bottom:14px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead tr{background:var(--navy-d);}
+th{color:rgba(255,255,255,.8);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:10px 14px;text-align:center;}
+th:first-child{border-radius:6px 0 0 6px;text-align:left;}
+th:last-child{border-radius:0 6px 6px 0;}
+td{padding:9px 14px;border-bottom:1px solid var(--gray-m);text-align:center;vertical-align:middle;}
+td:first-child{text-align:left;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--gray-l);}
+.tfoot td{background:#f8f9fa;font-weight:700;border-top:2px solid var(--gray-m);}
+.num{font-variant-numeric:tabular-nums;font-weight:600;}
+.bdg{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;}
+.bdg-g{background:var(--green-p);color:#1a7a3a;}
+.bdg-a{background:var(--amber-p);color:#92400e;}
+.bdg-r{background:var(--red-p);color:#991b1b;}
+.bdg-n{background:var(--gray-m);color:#374151;}
+.mbar-grid{display:flex;flex-direction:column;gap:10px;margin-top:6px;}
+.mbar-row{display:flex;align-items:center;gap:8px;}
+.mbar-lbl{font-size:11px;color:var(--muted);width:76px;flex-shrink:0;}
+.mbar-track{flex:1;height:8px;background:var(--gray-m);border-radius:4px;overflow:hidden;}
+.mbar-fill{height:100%;border-radius:4px;}
+.mbar-cnt{font-size:11px;font-weight:700;color:var(--navy);width:46px;text-align:right;flex-shrink:0;}
+.mbar-pct{font-size:10px;color:var(--muted);width:38px;text-align:right;flex-shrink:0;}
+.footer{text-align:center;padding:20px;color:var(--muted);font-size:11px;border-top:1px solid var(--gray-m);margin-top:8px;}
+@media(max-width:768px){.charts2,.charts3{grid-template-columns:1fr;}.main{padding:14px;}}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="logo">CU</div>
+    <div><div class="hdr-title">Dashboard Ejecutivo</div><div class="hdr-sub">Credit Union de Honduras</div></div>
+  </div>
+  <div class="hdr-r">
+    <div class="date-pill" id="rDate">Cargando…</div>
+    <div class="user-pill" id="userPill" style="display:none"></div>
+    <button class="btn-ref" onclick="location.reload()">⟳ Actualizar</button>
+  </div>
+</div>
+
+<div id="splashArea" class="splash">
+  <div class="splash-box">
+    <div class="spinner"></div>
+    <div class="splash-title">Cargando datos…</div>
+    <div class="splash-sub">Conectando con CarteraActiva de CREDITUNION.<br>Por favor espera.</div>
+  </div>
+</div>
+
+<div id="mainArea" style="display:none">
+  <div class="main">
+    <div id="filterSlot"></div>
+    <div id="dashContent"></div>
+  </div>
+  <div class="footer">Credit Union de Honduras — Dashboard Ejecutivo &nbsp;|&nbsp; <span style="color:#6AC187">●</span> Datos en tiempo real — Confidencial</div>
+</div>
+
+<script>
+// ── CONFIGURACIÓN — actualizar con tu URL de Web App ──────────
+const API_URL = 'https://script.google.com/macros/s/AKfycbx09sxVXb7jJLM2A09J42W_bER4RXx6YPEi1wZNJ4vPWUGoHxo5CC1Ii2zoSEYRywC_/exec';
+// ─────────────────────────────────────────────────────────────
+
+const NAVY='#2B3952',GREEN='#6AC187',AMBER='#f59e0b',RED='#ef4444',GRAY='#C2C1C1';
+const BCOLS=[GREEN,AMBER,'#f97316',RED,'#7f1d1d'];
+const BKTS=['0–8d','9–30d','31–60d','61–120d','121+d'];
+const BRATES=[1,5,25,60,100];
+
+let DATA=null;
+let fAg='',fAse='';
+let charts=[];
+
+function fL(n){return n>=1e6?`L ${(n/1e6).toFixed(2)}M`:n>=1000?`L ${(n/1000).toFixed(1)}K`:`L ${n.toFixed(0)}`;}
+function fLF(n){return'L '+n.toLocaleString('es-HN',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fP(n){return(n*100).toFixed(1)+'%';}
+function fN(n){return n.toLocaleString('es-HN');}
+
+// ── Leer token de la URL ──────────────────────────────────────
+function getToken(){
+  const p=new URLSearchParams(window.location.search);
+  return p.get('token')||'';
+}
+
+// ── Carga inicial automática ──────────────────────────────────
+window.addEventListener('DOMContentLoaded', async ()=>{
+  const token=getToken();
+  if(!token){
+    showError('Enlace inválido','Este dashboard solo es accesible desde el correo diario de CREDITUNION.<br>Si eres personal autorizado, solicita el reenvío del correo del día.','⛔');
+    return;
+  }
+  await cargarDatos(token);
+});
+
+async function cargarDatos(token){
+  try{
+    const url=API_URL+'?token='+encodeURIComponent(token);
+    const resp=await fetch(url,{credentials:'include'});
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    const json=await resp.json();
+
+    if(!json.ok){
+      if(json.error&&json.error.includes('Token')){
+        showError('Enlace expirado','Este enlace es válido solo por el día de hoy.<br>Espera el correo de mañana a las 8:00 AM.','⏰');
+      } else if(json.error&&json.error.includes('restringido')){
+        showError('Acceso restringido','Este dashboard requiere una cuenta <strong>@creditunionhn.com</strong>.<br>Inicia sesión con tu cuenta corporativa de Google.','🔒');
+      } else {
+        showError('Error al cargar',json.error||'Error desconocido.','⚠️');
+      }
+      return;
+    }
+
+    DATA=json;
+    document.getElementById('rDate').textContent=json.fechaReporte||json.generadoEn||'Datos del día';
+    if(json.usuario){
+      const pill=document.getElementById('userPill');
+      pill.textContent='👤 '+json.usuario.split('@')[0];
+      pill.style.display='block';
+    }
+    document.getElementById('splashArea').style.display='none';
+    document.getElementById('mainArea').style.display='block';
+    render();
+
+  }catch(err){
+    // Si es error CORS probablemente no está autenticado en Google
+    if(err.message.includes('Failed to fetch')||err.message.includes('CORS')){
+      showError('Autenticación requerida',
+        'Para ver el dashboard debes iniciar sesión con tu cuenta <strong>@creditunionhn.com</strong>.<br><br>'+
+        '<a href="https://accounts.google.com" target="_blank" style="color:#2B3952;font-weight:600">Iniciar sesión en Google →</a><br><br>'+
+        'Luego regresa a este enlace.','🔒');
+    } else {
+      showError('Error de conexión',err.message,'📡');
+    }
+  }
+}
+
+// ── Render dashboard con filtros ──────────────────────────────
+function getFiltered(){
+  if(!DATA)return null;
+  const byAgAll=DATA.byAgencia;
+  const byBkt=DATA.byBucket;
+
+  // Sin filtro — todo
+  if(!fAg&&!fAse){
+    const k=DATA.kpis;
+    return {byAg:byAgAll,byBkt,k,agN:Object.keys(byAgAll).sort((a,b)=>byAgAll[b].sal-byAgAll[a].sal)};
+  }
+
+  // Filtro por agencia — tomar solo esa agencia
+  let byAg={};
+  if(fAg&&byAgAll[fAg]) byAg[fAg]=byAgAll[fAg];
+  else byAg=byAgAll;
+
+  // KPIs recalculados según agencia filtrada
+  const agVals=Object.values(byAg);
+  const totSal=agVals.reduce((s,v)=>s+v.sal,0);
+  const moraSal=agVals.reduce((s,v)=>s+(v.mora||0),0);
+  const totCnt=agVals.reduce((s,v)=>s+v.cnt,0);
+  const totPrv=agVals.reduce((s,v)=>s+(v.prv||0),0);
+  const k={
+    totalSaldo:totSal||DATA.kpis.totalSaldo,
+    totalCreditos:totCnt||DATA.kpis.totalCreditos,
+    totalProv:totPrv||DATA.kpis.totalProv,
+    moraSaldo:moraSal,
+    moraCount:agVals.reduce((s,v)=>s+(v.moraCnt||0),0)||DATA.kpis.moraCount,
+    indMora:totSal>0?moraSal/totSal:DATA.kpis.indMora,
+    cobertura:moraSal>0?totPrv/moraSal:1,
+    graveCount:DATA.kpis.graveCount,
+    graveSaldo:DATA.kpis.graveSaldo,
+    alDiaCount:(totCnt||DATA.kpis.totalCreditos)-(agVals.reduce((s,v)=>s+(v.moraCnt||0),0)||DATA.kpis.moraCount),
+  };
+  return {byAg,byBkt,k,agN:Object.keys(byAg).sort((a,b)=>byAg[b].sal-byAg[a].sal)};
+}
+
+function getAsesores(){
+  if(!DATA||!DATA.byAsesor)return[];
+  const ases=Object.entries(DATA.byAsesor);
+  if(fAg) return ases.filter(([,v])=>v.ag===fAg).map(([n])=>n).sort();
+  return ases.map(([n])=>n).sort();
+}
+
+function destroyCharts(){charts.forEach(c=>{try{c.destroy();}catch(e){}});charts=[];}
+
+function render(){
+  if(!DATA)return;
+  destroyCharts();
+  const {byAg,byBkt,k,agN}=getFiltered();
+
+  // Filtro bar
+  const ages=Object.keys(DATA.byAgencia).sort();
+  const ases=getAsesores();
+  const filterLabel=fAse?' — '+fAse:fAg?' — '+fAg:'';
+
+  document.getElementById('filterSlot').innerHTML=`
+  <div class="filter-bar">
+    <label>Agencia</label>
+    <select class="fsel" onchange="fAg=this.value;fAse='';render()">
+      <option value="">Todas las agencias</option>
+      ${ages.map(a=>`<option value="${a}"${fAg===a?' selected':''}>${a}</option>`).join('')}
+    </select>
+    <label>Asesor</label>
+    <select class="fsel" onchange="fAse=this.value;render()">
+      <option value="">${fAg?'Todos de '+fAg:'Todos los asesores'}</option>
+      ${ases.map(a=>`<option value="${a}"${fAse===a?' selected':''}>${a}</option>`).join('')}
+    </select>
+    ${(fAg||fAse)?`<button class="fclear" onclick="fAg='';fAse='';render()">✕ Limpiar</button>`:''}
+    <div class="fcnt"><strong>${fN(k.totalCreditos)}</strong> créditos${filterLabel}</div>
+  </div>`;
+
+  document.getElementById('dashContent').innerHTML=`
+  <div class="kpi-grid">
+    <div class="kpi g"><div class="kpi-lbl">Cartera Total</div><div class="kpi-val sm">${fL(k.totalSaldo)}</div><div class="kpi-sub">${fN(k.totalCreditos)} créditos activos</div><div class="kpi-ico">💼</div></div>
+    <div class="kpi ${k.indMora>.1?'r':k.indMora>.05?'a':'g'}"><div class="kpi-lbl">Índice de Mora</div><div class="kpi-val">${fP(k.indMora)}</div><div class="kpi-sub">${fL(k.moraSaldo)} — ${fN(k.moraCount)} créditos</div><div class="kpi-ico">⚠️</div></div>
+    <div class="kpi a"><div class="kpi-lbl">Provisión Requerida</div><div class="kpi-val sm">${fL(k.totalProv)}</div><div class="kpi-sub">${fP(k.totalProv/k.totalSaldo)} de la cartera</div><div class="kpi-ico">🛡️</div></div>
+    <div class="kpi ${k.cobertura>=1?'g':'r'}"><div class="kpi-lbl">Cobertura de Mora</div><div class="kpi-val">${fP(k.cobertura)}</div><div class="kpi-sub">Provisión vs mora</div><div class="kpi-ico">📊</div></div>
+    <div class="kpi r"><div class="kpi-lbl">Mora Grave +120d</div><div class="kpi-val sm">${fL(k.graveSaldo)}</div><div class="kpi-sub">${fN(k.graveCount)} créditos — ${fP(k.graveSaldo/k.totalSaldo)}</div><div class="kpi-ico">🔴</div></div>
+    <div class="kpi n"><div class="kpi-lbl">Cartera Al Día</div><div class="kpi-val">${fP(k.alDiaCount/k.totalCreditos)}</div><div class="kpi-sub">${fN(k.alDiaCount)} créditos vigentes</div><div class="kpi-ico">✅</div></div>
+  </div>
+  <div class="sec"><h2>Distribución de Cartera${filterLabel}</h2><div class="sec-line"></div></div>
+  <div class="charts2">
+    <div class="card"><h3>Saldo por Agencia</h3><div class="card-sub">Portafolio activo por sucursal</div><div class="ch-wrap"><canvas id="cAg"></canvas></div></div>
+    <div class="card"><h3>Distribución por Mora</h3><div class="card-sub">Saldo según días de atraso</div><div class="ch-wrap"><canvas id="cMora"></canvas></div></div>
+  </div>
+  <div class="charts3">
+    <div class="card"><h3>% Mora por Agencia</h3><div class="card-sub">Semáforo de morosidad</div><div class="ch-wrap"><canvas id="cMoraAg"></canvas></div></div>
+    <div class="card"><h3>Provisión vs Saldo</h3><div class="card-sub">Requerimiento de reserva</div><div class="ch-wrap"><canvas id="cPrv"></canvas></div></div>
+    <div class="card" style="display:flex;flex-direction:column;gap:6px;">
+      <div><h3>Calidad de Cartera</h3><div class="card-sub">Créditos por rango de mora</div></div>
+      <div class="mbar-grid" id="mbarGrid"></div>
+    </div>
+  </div>
+  <div class="sec"><h2>Resumen por Agencia</h2><div class="sec-line"></div></div>
+  <div class="tbl-card">
+    <h3>Detalle por Sucursal</h3><div class="tbl-sub">CarteraActiva — ${DATA.generadoEn||''}</div>
+    <table>
+      <thead><tr><th>Agencia</th><th>Créditos</th><th>Saldo Total</th><th>En Mora</th><th>% Mora</th><th>Provisión</th><th>Estado</th></tr></thead>
+      <tbody>
+        ${agN.map(a=>{const v=byAg[a];const p=v.mora/v.sal;const[bc,bl]=p>.1?['bdg-r','Crítica']:p>.05?['bdg-a','Regular']:['bdg-g','Buena'];
+        return`<tr><td><strong>${a}</strong></td><td class="num">${fN(v.cnt)}</td><td class="num">${fLF(v.sal)}</td><td class="num">${fLF(v.mora)}</td><td class="num">${fP(p)}</td><td class="num">${fLF(v.prv)}</td><td><span class="bdg ${bc}">${bl}</span></td></tr>`;}).join('')}
+        <tr class="tfoot"><td>TOTAL</td><td class="num">${fN(k.totalCreditos)}</td><td class="num">${fLF(k.totalSaldo)}</td><td class="num">${fLF(k.moraSaldo)}</td><td class="num">${fP(k.indMora)}</td><td class="num">${fLF(k.totalProv)}</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="sec"><h2>Análisis CNBS</h2><div class="sec-line"></div></div>
+  <div class="tbl-card">
+    <h3>Provisión por Rango de Mora</h3><div class="tbl-sub">Escala CNBS: 1% / 5% / 25% / 60% / 100%</div>
+    <table>
+      <thead><tr><th>Rango</th><th>Tasa</th><th>Créditos</th><th>% Créditos</th><th>Saldo</th><th>% Cartera</th><th>Provisión</th></tr></thead>
+      <tbody>
+        ${BKTS.map((b,i)=>{const v=byBkt[b]||{cnt:0,sal:0,prv:0};const[bc,bl]=i===0?['bdg-g','Vigente']:i<3?['bdg-a','Riesgo medio']:['bdg-r','Alto riesgo'];
+        return`<tr><td><strong>${b}</strong></td><td><span class="bdg ${bc}">${BRATES[i]}%</span></td><td class="num">${fN(v.cnt)}</td><td class="num">${fP(v.cnt/k.totalCreditos)}</td><td class="num">${fLF(v.sal)}</td><td class="num">${fP(v.sal/k.totalSaldo)}</td><td class="num">${fLF(v.prv)}</td></tr>`;}).join('')}
+        <tr class="tfoot"><td>TOTAL</td><td>—</td><td class="num">${fN(k.totalCreditos)}</td><td class="num">100%</td><td class="num">${fLF(k.totalSaldo)}</td><td class="num">100%</td><td class="num">${fLF(k.totalProv)}</td></tr>
+      </tbody>
+    </table>
+  </div>`;
+
+  // Charts
+  const agC=[NAVY,GREEN,'#4a6585','#8ed4a0','#a3bfd4'];
+  charts.push(new Chart(document.getElementById('cAg'),{type:'bar',data:{labels:agN,datasets:[{data:agN.map(a=>byAg[a].sal),backgroundColor:agC,borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fL(v),font:{size:10}},grid:{color:'#f0f0f0'}},y:{ticks:{font:{size:11}}}}}}));
+  charts.push(new Chart(document.getElementById('cMora'),{type:'doughnut',data:{labels:BKTS,datasets:[{data:BKTS.map(b=>(byBkt[b]||{sal:0}).sal),backgroundColor:BCOLS,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:10},padding:8}},tooltip:{callbacks:{label:ctx=>` ${fL(ctx.raw)} (${fP(ctx.raw/k.totalSaldo)})`}}}}}));
+  const agS=Object.entries(byAg).sort((a,b)=>(b[1].mora/b[1].sal)-(a[1].mora/a[1].sal));
+  charts.push(new Chart(document.getElementById('cMoraAg'),{type:'bar',data:{labels:agS.map(([a])=>a),datasets:[{data:agS.map(([,v])=>((v.mora/v.sal)*100).toFixed(1)),backgroundColor:agS.map(([,v])=>{const p=v.mora/v.sal;return p>.1?RED:p>.05?AMBER:GREEN;}),borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:'#f0f0f0'}},x:{ticks:{font:{size:10}}}}}}));
+  charts.push(new Chart(document.getElementById('cPrv'),{type:'bar',data:{labels:agN,datasets:[{label:'Saldo',data:agN.map(a=>byAg[a].sal),backgroundColor:GRAY,borderRadius:4},{label:'Provisión',data:agN.map(a=>byAg[a].prv),backgroundColor:AMBER,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},scales:{x:{ticks:{font:{size:10}}},y:{ticks:{callback:v=>fL(v),font:{size:9}},grid:{color:'#f0f0f0'}}}}}));
+  const maxS=Math.max(...BKTS.map(b=>(byBkt[b]||{sal:0}).sal),1);
+  document.getElementById('mbarGrid').innerHTML=BKTS.map((b,i)=>{const v=byBkt[b]||{cnt:0,sal:0};return`<div class="mbar-row"><div class="mbar-lbl">${b}</div><div class="mbar-track"><div class="mbar-fill" style="width:${(v.sal/maxS*100).toFixed(1)}%;background:${BCOLS[i]}"></div></div><div class="mbar-cnt">${fN(v.cnt)}</div><div class="mbar-pct">${fP(v.sal/k.totalSaldo)}</div></div>`;}).join('');
+}
+
+function showError(title,msg,icon='⚠️'){
+  document.getElementById('splashArea').style.display='flex';
+  document.getElementById('mainArea').style.display='none';
+  document.getElementById('splashArea').innerHTML=`
+  <div class="splash-box">
+    <div class="splash-icon">${icon}</div>
+    <div class="splash-title">${title}</div>
+    <div class="splash-sub">${msg}</div>
+  </div>`;
+}
+</script>
+</body>
+</html>
