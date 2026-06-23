@@ -157,7 +157,7 @@ function getToken(){
 }
 
 // ── Carga inicial automática ──────────────────────────────────
-window.addEventListener('DOMContentLoaded', async ()=>{
+window.addEventListener('DOMContentLoaded', ()=>{
   const token=getToken();
   if(!token){
     showError('Enlace inválido','Este dashboard solo es accesible desde el correo diario de CREDITUNION.<br>Si eres personal autorizado, solicita el reenvío del correo del día.','⛔');
@@ -166,18 +166,27 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   await cargarDatos(token);
 });
 
-async function cargarDatos(token){
-  try{
-    const url=API_URL+'?token='+encodeURIComponent(token);
-    const resp=await fetch(url,{credentials:'include'});
-    if(!resp.ok)throw new Error('HTTP '+resp.status);
-    const json=await resp.json();
+function cargarDatos(token){
+  // JSONP — evita CORS entre GitHub Pages y Apps Script
+  const cbName = 'cb_cu_' + Date.now();
+  const script  = document.createElement('script');
+
+  // Timeout 15 segundos
+  const timer = setTimeout(()=>{
+    delete window[cbName];
+    script.remove();
+    showError('Tiempo agotado',
+      'El servidor tardó demasiado en responder.<br>Verifica que la Web App esté publicada y vuelve a intentar.','⏱️');
+  }, 15000);
+
+  window[cbName] = function(json){
+    clearTimeout(timer);
+    delete window[cbName];
+    script.remove();
 
     if(!json.ok){
       if(json.error&&json.error.includes('Token')){
         showError('Enlace expirado','Este enlace es válido solo por el día de hoy.<br>Espera el correo de mañana a las 8:00 AM.','⏰');
-      } else if(json.error&&json.error.includes('restringido')){
-        showError('Acceso restringido','Este dashboard requiere una cuenta <strong>@creditunionhn.com</strong>.<br>Inicia sesión con tu cuenta corporativa de Google.','🔒');
       } else {
         showError('Error al cargar',json.error||'Error desconocido.','⚠️');
       }
@@ -186,21 +195,21 @@ async function cargarDatos(token){
 
     DATA=json;
     document.getElementById('rDate').textContent=json.fechaReporte||json.generadoEn||'Datos del día';
-    if(json.usuario){
-      const pill=document.getElementById('userPill');
-      pill.textContent='👤 '+json.usuario.split('@')[0];
-      pill.style.display='block';
-    }
     document.getElementById('splashArea').style.display='none';
     document.getElementById('mainArea').style.display='block';
     render();
+  };
 
-  }catch(err){
+  script.src = API_URL
+    + '?token=' + encodeURIComponent(token)
+    + '&callback=' + cbName;
+  script.onerror = ()=>{
+    clearTimeout(timer);
+    delete window[cbName];
     showError('Error de conexión',
-      'No se pudo conectar con el servidor de datos.<br>'+
-      'Verifica tu conexión e intenta de nuevo.<br><br>'+
-      '<small style="color:#9ca3af">Detalle: '+err.message+'</small>','📡');
-  }
+      'No se pudo conectar con el servidor.<br>Verifica que la Web App esté publicada correctamente.','📡');
+  };
+  document.head.appendChild(script);
 }
 
 // ── Render dashboard con filtros ──────────────────────────────
