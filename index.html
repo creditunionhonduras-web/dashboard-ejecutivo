@@ -196,15 +196,10 @@ async function cargarDatos(token){
     render();
 
   }catch(err){
-    // Si es error CORS probablemente no está autenticado en Google
-    if(err.message.includes('Failed to fetch')||err.message.includes('CORS')){
-      showError('Autenticación requerida',
-        'Para ver el dashboard debes iniciar sesión con tu cuenta <strong>@creditunionhn.com</strong>.<br><br>'+
-        '<a href="https://accounts.google.com" target="_blank" style="color:#2B3952;font-weight:600">Iniciar sesión en Google →</a><br><br>'+
-        'Luego regresa a este enlace.','🔒');
-    } else {
-      showError('Error de conexión',err.message,'📡');
-    }
+    showError('Error de conexión',
+      'No se pudo conectar con el servidor de datos.<br>'+
+      'Verifica tu conexión e intenta de nuevo.<br><br>'+
+      '<small style="color:#9ca3af">Detalle: '+err.message+'</small>','📡');
   }
 }
 
